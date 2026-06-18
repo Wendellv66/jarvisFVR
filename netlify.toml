@@ -1,0 +1,5 @@
+# Publica APENAS a landing page estática (o preview do WhatsApp + redirecionamento).
+# O app J.A.R.V.I.S. (Streamlit/Python) NÃO roda no Netlify — ele fica num host Python
+# (Streamlit Cloud, Render, Hugging Face Spaces, etc.) e a landing aponta para ele.
+[build]
+  publish = "landing"
