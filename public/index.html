@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>J.A.R.V.I.S. — FVR Comercial</title>
+  <meta name="description" content="Assistente de inteligência técnica da FVR Comercial." />
+
+  <!-- Ícones -->
+  <link rel="icon" href="favicon.png" />
+  <link rel="apple-touch-icon" href="icon.png" />
+
+  <!-- Preview no WhatsApp / redes (troque a URL por: https://SEU-SITE.netlify.app/icon.png) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="J.A.R.V.I.S. — FVR Comercial" />
+  <meta property="og:description" content="Assistente de inteligência técnica da FVR Comercial." />
+  <meta property="og:image" content="icon.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ===================== TELA DE LOGIN ===================== -->
+  <div id="tela-login">
+    <div class="hud-login">
+      <span class="hud-corner tl"></span><span class="hud-corner tr"></span>
+      <span class="hud-corner bl"></span><span class="hud-corner br"></span>
+      <div class="reactor-stack">
+        <div class="ring ring1"></div><div class="ring ring2"></div><div class="ring ring3"></div>
+        <div class="arc-reactor"></div>
+      </div>
+      <div class="login-title">J.A.R.V.I.S.</div>
+      <div class="login-badge">◤ ACESSO RESTRITO ◢</div>
+      <div class="boot-line">INICIALIZANDO INTERFACE STARK...</div>
+
+      <form id="form-login">
+        <div class="campo">
+          <label><span class="micon">person</span> Identificação</label>
+          <input type="text" id="in-usuario" autocomplete="username" />
+        </div>
+        <div class="campo">
+          <label><span class="micon">key</span> Código de acesso</label>
+          <input type="password" id="in-senha" autocomplete="current-password" />
+        </div>
+        <button class="btn primario" type="submit"><span class="micon">bolt</span> INICIAR SISTEMA</button>
+        <div class="erro hidden" id="login-erro"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== APP ===================== -->
+  <div id="tela-app" class="hidden">
+    <div class="topo">
+      <div class="arc-reactor"></div>
+      <div>
+        <div class="titulo">J.A.R.V.I.S.</div>
+        <div class="sub">JUST A RATHER VERY INTELLIGENT SYSTEM &nbsp;•&nbsp; FVR COMERCIAL</div>
+      </div>
+    </div>
+
+    <div class="barra">
+      <span class="chip"><span class="micon">smart_toy</span> Núcleo: <b id="chip-modelo">gpt-4o-mini</b></span>
+      <button class="btn azul" id="btn-baixar"><span class="micon">download</span> Baixar biblioteca</button>
+      <button class="btn" id="btn-nova"><span class="micon">restart_alt</span> Nova conversa</button>
+      <button class="btn" id="btn-sair"><span class="micon">logout</span> Sair</button>
+    </div>
+
+    <!-- Upload de PDF -->
+    <details class="painel-pdf">
+      <summary><span class="micon">picture_as_pdf</span> Enviar um PDF para o J.A.R.V.I.S. aprender</summary>
+      <div style="margin-top:10px">
+        <input type="file" id="pdf-file" accept="application/pdf" />
+        <button class="btn azul" id="btn-analisar"><span class="micon">search</span> Analisar PDF</button>
+        <div id="pdf-status" style="margin-top:8px;color:var(--suave)"></div>
+        <div id="pdf-lista"></div>
+      </div>
+    </details>
+
+    <div class="colunas">
+      <div class="coluna">
+        <h2><span class="micon">forum</span> Conversa</h2>
+        <div class="caixa" id="chat"></div>
+        <div class="entrada">
+          <input type="text" id="in-msg" placeholder="Escreva aqui o que quer ensinar ou perguntar, senhor..." />
+          <button class="btn" id="btn-enviar"><span class="micon">send</span></button>
+        </div>
+      </div>
+      <div class="coluna">
+        <h2><span class="micon">neurology</span> Cérebro (Biblioteca Técnica)</h2>
+        <div class="caixa caixa-cerebro" id="cerebro"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

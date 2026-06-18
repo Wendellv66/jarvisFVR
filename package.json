@@ -1,0 +1,11 @@
+{
+  "name": "jarvis-fvr",
+  "version": "1.0.0",
+  "description": "J.A.R.V.I.S. — Agente Entrevistador da FVR (Netlify + Supabase + OpenAI)",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "openai": "^4.56.0",
+    "pdf-parse": "^1.1.1"
+  }
+}

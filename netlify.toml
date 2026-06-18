@@ -1,5 +1,13 @@
-# Publica APENAS a landing page estática (o preview do WhatsApp + redirecionamento).
-# O app J.A.R.V.I.S. (Streamlit/Python) NÃO roda no Netlify — ele fica num host Python
-# (Streamlit Cloud, Render, Hugging Face Spaces, etc.) e a landing aponta para ele.
+# Configuração do Netlify para o J.A.R.V.I.S. (site estático + funções)
 [build]
-  publish = "landing"
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# URLs amigáveis: /api/login -> /.netlify/functions/login
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
