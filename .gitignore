@@ -1,0 +1,19 @@
+# Segredos — NUNCA subir
+.env
+.streamlit/secrets.toml
+
+# Dados locais gerados em runtime
+conversa.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Arquivos temporários
+_teste*.py
+_prova*.py
+_report.txt
+st_out.log
+st_err.log

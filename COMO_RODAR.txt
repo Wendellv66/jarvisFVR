@@ -1,0 +1,19 @@
+COMO RODAR O AGENTE ENTREVISTADOR DA FVR
+========================================
+
+1) Abra o PowerShell dentro desta pasta.
+
+2) Instale os programas (só na primeira vez):
+       pip install -r requirements.txt
+
+3) Coloque a chave da OpenAI:
+   - Copie o arquivo  .env.exemplo  e renomeie a cópia para  .env
+   - Abra o  .env  e troque sk-XXXX pela sua chave da OpenAI.
+
+4) Inicie o agente:
+       streamlit run app.py
+
+   Abre uma pagina no navegador. E so conversar.
+
+Tudo que o Fabio ensinar fica salvo no arquivo  biblioteca_fvr.md
+(no final, com data). Se algo sair errado, abra esse arquivo e edite.

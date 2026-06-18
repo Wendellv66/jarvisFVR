@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ===================================================================== -->
+  <!-- TROQUE OS DOIS LINKS ABAIXO:                                           -->
+  <!--  1) APP_URL  = o link do app no Streamlit Cloud                        -->
+  <!--  2) BASE_URL = o link desta página (onde você publicou esta landing)  -->
+  <!-- ===================================================================== -->
+
+  <title>J.A.R.V.I.S. — FVR Comercial</title>
+  <meta name="description" content="Assistente de inteligência técnica da FVR Comercial — alimentado pela experiência do Mestre Fabio Vidal." />
+
+  <!-- Open Graph (preview no WhatsApp / redes sociais) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="J.A.R.V.I.S. — FVR Comercial" />
+  <meta property="og:description" content="Assistente de inteligência técnica da FVR Comercial." />
+  <meta property="og:image" content="BASE_URL/icon.png" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Ícones -->
+  <link rel="icon" href="icon.png" />
+  <link rel="apple-touch-icon" href="icon.png" />
+
+  <!-- Redireciona para o app -->
+  <meta http-equiv="refresh" content="0; url=APP_URL" />
+  <script>window.location.replace("APP_URL");</script>
+
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: radial-gradient(circle at 50% 30%, #0c1018, #07080d);
+      color: #eaeaf0; font-family: system-ui, sans-serif; text-align: center; gap: 14px;
+    }
+    img { width: 96px; height: 96px; border-radius: 22px;
+      box-shadow: 0 0 28px rgba(79,210,255,0.5); }
+    h1 { font-size: 1.4rem; letter-spacing: 2px; margin: 0; color: #ffd24a; }
+    p { color: #9fb6c9; margin: 0; }
+    a { color: #4fd2ff; }
+  </style>
+</head>
+<body>
+  <img src="icon.png" alt="J.A.R.V.I.S." />
+  <h1>J.A.R.V.I.S.</h1>
+  <p>Iniciando o sistema...</p>
+  <p>Se não for redirecionado, <a href="APP_URL">clique aqui</a>.</p>
+</body>
+</html>
