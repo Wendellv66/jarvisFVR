@@ -25,11 +25,22 @@ exports.handler = async (event) => {
   // 1) Biblioteca atual (base + fatos)
   const biblioteca = await core.construirBiblioteca();
 
-  // 2) Extrair e salvar fatos novos (anti-alucinação)
+  // 2) Extrair fatos. NOVOS salvam direto; CORREÇÕES pedem confirmação antes de alterar.
   let anotacoes = [];
+  let pendentes = [];
   try {
     const fatos = await core.extrair(mensagemFabio, biblioteca);
-    anotacoes = await core.salvarFatos(fatos);
+    const novos = fatos.filter((f) => f.tipo !== "correcao");
+    const correcoes = fatos.filter((f) => f.tipo === "correcao");
+    anotacoes = await core.salvarFatos(novos);
+    for (const c of correcoes) {
+      const atual = await core.acharSemelhante(c.assunto, c.conteudo);
+      pendentes.push({
+        assunto: c.assunto,
+        conteudo: c.conteudo,
+        atual: atual ? atual.conteudo : null,
+      });
+    }
   } catch (e) {
     anotacoes = [];
   }
@@ -71,6 +82,7 @@ exports.handler = async (event) => {
   return core.json(200, {
     resposta,
     anotacoes,
+    pendentes,
     resumo,
     n_resumidas: nResumidas,
     fatos: fatosAtuais,

@@ -66,24 +66,23 @@
       <button class="btn" id="btn-sair"><span class="micon">logout</span> Sair</button>
     </div>
 
-    <!-- Upload de PDF -->
-    <details class="painel-pdf">
-      <summary><span class="micon">picture_as_pdf</span> Enviar um PDF para o J.A.R.V.I.S. aprender</summary>
-      <div style="margin-top:10px">
-        <input type="file" id="pdf-file" accept="application/pdf" />
-        <button class="btn azul" id="btn-analisar"><span class="micon">search</span> Analisar PDF</button>
-        <div id="pdf-status" style="margin-top:8px;color:var(--suave)"></div>
-        <div id="pdf-lista"></div>
-      </div>
-    </details>
-
     <div class="colunas">
       <div class="coluna">
         <h2><span class="micon">forum</span> Conversa</h2>
         <div class="caixa" id="chat"></div>
+
+        <!-- chip do arquivo anexado (aparece quando há PDF) -->
+        <div id="anexo-chip" class="anexo-chip hidden">
+          <span class="micon">picture_as_pdf</span>
+          <span id="anexo-nome"></span>
+          <button id="btn-remover-anexo" title="Remover"><span class="micon">close</span></button>
+        </div>
+
         <div class="entrada">
-          <input type="text" id="in-msg" placeholder="Escreva aqui o que quer ensinar ou perguntar, senhor..." />
-          <button class="btn" id="btn-enviar"><span class="micon">send</span></button>
+          <input type="file" id="pdf-file" accept="application/pdf" hidden />
+          <button class="btn-icone" id="btn-anexar" title="Anexar PDF"><span class="micon">attach_file</span></button>
+          <input type="text" id="in-msg" placeholder="Escreva para o J.A.R.V.I.S., senhor..." />
+          <button class="btn-icone enviar" id="btn-enviar" title="Enviar"><span class="micon">send</span></button>
         </div>
       </div>
       <div class="coluna">

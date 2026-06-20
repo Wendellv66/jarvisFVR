@@ -75,7 +75,6 @@ async function entrarNoApp() {
   $("tela-app").classList.remove("hidden");
   try {
     const dados = await api("/estado", "GET");
-    estado.base = dados.base || "";
     estado.fatos = dados.fatos || [];
     if (dados.conversa && dados.conversa.historico && dados.conversa.historico.length) {
       estado.historico = dados.conversa.historico;
@@ -107,6 +106,7 @@ function criarMsg(m) {
   const ehJarvis = m.role === "assistant";
   div.className = "msg " + (ehJarvis ? "jarvis" : "user");
   const anotei = ehJarvis && m.content.startsWith("__ANOTEI__");
+  const nome = ehJarvis ? "J.A.R.V.I.S." : "VOCÊ (FABIO)";
   let bolhaHtml;
   let classeBolha = "bolha";
   if (anotei) {
@@ -119,26 +119,74 @@ function criarMsg(m) {
   }
   div.innerHTML =
     `<div class='av'>${ehJarvis ? SVG_JARVIS : SVG_FABIO}</div>` +
-    `<div class='${classeBolha}'>${bolhaHtml}</div>`;
+    `<div class='corpo'><div class='nome'>${nome}</div><div class='${classeBolha}'>${bolhaHtml}</div></div>`;
   return div;
 }
 
-// ---------- Render do cérebro ----------
+// ---------- Render do cérebro (tudo vem do banco) ----------
+function linhaFato(f) {
+  const tag = f.tipo === "correcao" ? " <span style='color:#ffb86b'>[corrigido]</span>" : "";
+  return `<div class='fato-linha'><span class='cod'>${escapeHtml(f.assunto || "")}</span>${tag}: ${escapeHtml(f.conteudo || "")}</div>`;
+}
 function renderCerebro() {
   const c = $("cerebro");
+  const aprendidos = estado.fatos.filter((f) => f.tipo !== "base");
+  const base = estado.fatos.filter((f) => f.tipo === "base");
   let html = "";
-  if (estado.fatos.length) {
-    html += "<div style='font-family:Orbitron;color:#ffd24a;margin-bottom:8px'><span class='micon' style='color:#4fd2ff'>fiber_new</span> Anotações novas</div>";
-    for (const f of estado.fatos) {
-      const tag = f.tipo === "correcao" ? " [corrigido]" : "";
-      html += `<div class='fato-linha'><span class='cod'>${escapeHtml(f.assunto || "")}${tag}</span>: ${escapeHtml(f.conteudo || "")}</div>`;
-    }
+
+  if (aprendidos.length) {
+    html += `<div style='font-family:Orbitron;color:#ffd24a;margin-bottom:8px'><span class='micon' style='color:#4fd2ff'>fiber_new</span> Aprendido com o Fabio (${aprendidos.length})</div>`;
+    html += "<div class='lista-aprendidos'>" + aprendidos.map(linhaFato).join("") + "</div>";
+    html += "<hr style='border-color:rgba(255,255,255,0.08);margin:12px 0'>";
   } else {
-    html += "<div class='cerebro-novo'><span class='micon'>fiber_new</span> <b>Anotações novas</b> aparecerão aqui assim que o senhor me ensinar algo.</div>";
+    html += "<div class='cerebro-novo'><span class='micon'>fiber_new</span> O que o senhor ensinar aparecerá aqui no topo.</div>";
   }
-  html += "<hr style='border-color:rgba(255,255,255,0.08);margin:12px 0'>";
-  html += "<div class='base-texto'>" + escapeHtml(estado.base) + "</div>";
+
+  html += "<div style='font-family:Orbitron;color:#ffd24a;margin:6px 0 8px'><span class='micon' style='color:#4fd2ff'>menu_book</span> Biblioteca base</div>";
+  base.forEach((f) => (html += linhaFato(f)));
   c.innerHTML = html;
+}
+
+// ---------- Card de confirmação de alteração ----------
+function mostrarCardConfirmacao(p) {
+  const chat = $("chat");
+  const div = document.createElement("div");
+  div.className = "msg jarvis";
+  const atualTxt = p.atual
+    ? `<div style='color:#9fb6c9;margin:4px 0'>Atual: ${escapeHtml(p.atual)}</div>`
+    : "<div style='color:#9fb6c9;margin:4px 0'>(não encontrei um registro igual; será adicionado como correção)</div>";
+  div.innerHTML =
+    `<div class='av'>${SVG_JARVIS}</div><div class='corpo'><div class='nome'>J.A.R.V.I.S.</div>` +
+    "<div class='bolha anotei'>" +
+    "<b><span class='micon'>edit</span> Confirmar alteração, senhor?</b><br>" +
+    `<div style='margin:4px 0'><b>${escapeHtml(p.assunto)}</b></div>` +
+    atualTxt +
+    `<div style='color:#cfeeff;margin:4px 0'>Novo: ${escapeHtml(p.conteudo)}</div>` +
+    "<div style='display:flex;gap:8px;margin-top:8px'>" +
+    "<button class='btn' data-acao='sim'><span class='micon'>check</span> Confirmar</button>" +
+    "<button class='btn azul' data-acao='nao'><span class='micon'>close</span> Cancelar</button>" +
+    "</div></div></div>";
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+
+  div.querySelector("[data-acao=sim]").addEventListener("click", async () => {
+    div.querySelector(".bolha").innerHTML =
+      "<div class='thinking'><div class='reactor-mini'></div> Alterando...</div>";
+    try {
+      const dados = await api("/salvar", "POST", {
+        fatos: [{ assunto: p.assunto, conteudo: p.conteudo, tipo: "correcao" }],
+      });
+      estado.fatos = dados.fatos || estado.fatos;
+      div.querySelector(".bolha").innerHTML =
+        "<span class='micon'>check_circle</span> <b>Alterado:</b> " + escapeHtml(p.conteudo);
+      renderCerebro();
+    } catch (e) {
+      div.querySelector(".bolha").innerHTML = "Não consegui alterar agora, senhor.";
+    }
+  });
+  div.querySelector("[data-acao=nao]").addEventListener("click", () => {
+    div.querySelector(".bolha").innerHTML = "<span class='micon'>close</span> Alteração cancelada.";
+  });
 }
 
 // ---------- Enviar mensagem ----------
@@ -156,11 +204,13 @@ async function enviar() {
   const pensando = document.createElement("div");
   pensando.className = "msg jarvis";
   pensando.innerHTML =
-    `<div class='av'>${SVG_JARVIS}</div><div class='bolha'><div class='thinking'>` +
-    `<div class='reactor-mini'></div> J.A.R.V.I.S. processando<span class='dots'><span>.</span><span>.</span><span>.</span></span></div></div>`;
+    `<div class='av'>${SVG_JARVIS}</div><div class='corpo'><div class='nome'>J.A.R.V.I.S.</div>` +
+    `<div class='bolha'><div class='thinking'>` +
+    `<div class='reactor-mini'></div> processando<span class='dots'><span>.</span><span>.</span><span>.</span></span></div></div></div>`;
   chat.appendChild(pensando);
   chat.scrollTop = chat.scrollHeight;
 
+  let pendentes = [];
   try {
     const dados = await api("/turno", "POST", {
       historico: estado.historico,
@@ -170,6 +220,7 @@ async function enviar() {
     estado.resumo = dados.resumo || estado.resumo;
     estado.n_resumidas = dados.n_resumidas || estado.n_resumidas;
     estado.fatos = dados.fatos || estado.fatos;
+    pendentes = dados.pendentes || [];
     if (dados.anotacoes && dados.anotacoes.length) {
       estado.historico.push({
         role: "assistant",
@@ -182,19 +233,58 @@ async function enviar() {
   }
   renderChat();
   renderCerebro();
+  // Correções detectadas só são aplicadas após o Fabio confirmar
+  pendentes.forEach((p) => mostrarCardConfirmacao(p));
 }
-$("btn-enviar").addEventListener("click", enviar);
-$("in-msg").addEventListener("keydown", (e) => { if (e.key === "Enter") enviar(); });
+async function aoEnviar() {
+  if (arquivoPdf) await analisarPdf();
+  if ($("in-msg").value.trim()) await enviar();
+}
+$("btn-enviar").addEventListener("click", aoEnviar);
+$("in-msg").addEventListener("keydown", (e) => { if (e.key === "Enter") aoEnviar(); });
 
-// ---------- PDF ----------
-let pdfFatos = [];
-$("btn-analisar").addEventListener("click", async () => {
-  const file = $("pdf-file").files[0];
-  const status = $("pdf-status");
-  const lista = $("pdf-lista");
-  lista.innerHTML = "";
-  if (!file) { status.textContent = "Selecione um PDF primeiro."; return; }
-  status.innerHTML = "<div class='thinking'><div class='reactor-mini'></div> Lendo o documento...</div>";
+// ---------- Anexar PDF (dentro do chat) ----------
+let arquivoPdf = null;
+
+$("btn-anexar").addEventListener("click", () => $("pdf-file").click());
+
+$("pdf-file").addEventListener("change", () => {
+  arquivoPdf = $("pdf-file").files[0] || null;
+  if (arquivoPdf) {
+    $("anexo-nome").textContent = arquivoPdf.name;
+    $("anexo-chip").classList.remove("hidden");
+  }
+});
+
+$("btn-remover-anexo").addEventListener("click", () => {
+  arquivoPdf = null;
+  $("pdf-file").value = "";
+  $("anexo-chip").classList.add("hidden");
+});
+
+async function analisarPdf() {
+  const file = arquivoPdf;
+  // limpa o anexo da barra
+  arquivoPdf = null;
+  $("pdf-file").value = "";
+  $("anexo-chip").classList.add("hidden");
+
+  const chat = $("chat");
+  // mostra "anexo enviado" como mensagem do Fabio
+  const msgUser = document.createElement("div");
+  msgUser.className = "msg user";
+  msgUser.innerHTML =
+    `<div class='av'>${SVG_FABIO}</div><div class='corpo'><div class='nome'>VOCÊ (FABIO)</div>` +
+    `<div class='bolha'><span class='micon'>picture_as_pdf</span> ${escapeHtml(file.name)}</div></div>`;
+  chat.appendChild(msgUser);
+
+  const pensando = document.createElement("div");
+  pensando.className = "msg jarvis";
+  pensando.innerHTML =
+    `<div class='av'>${SVG_JARVIS}</div><div class='corpo'><div class='nome'>J.A.R.V.I.S.</div>` +
+    "<div class='bolha'><div class='thinking'><div class='reactor-mini'></div> Lendo o documento<span class='dots'><span>.</span><span>.</span><span>.</span></span></div></div></div>";
+  chat.appendChild(pensando);
+  chat.scrollTop = chat.scrollHeight;
 
   const base64 = await new Promise((res) => {
     const r = new FileReader();
@@ -202,43 +292,70 @@ $("btn-analisar").addEventListener("click", async () => {
     r.readAsDataURL(file);
   });
 
+  let dados;
   try {
-    const dados = await api("/pdf", "POST", { arquivo_base64: base64, nome: file.name });
-    if (dados.aviso) { status.textContent = dados.aviso; return; }
-    pdfFatos = dados.fatos || [];
-    if (!pdfFatos.length) { status.textContent = "Não encontrei fatos técnicos neste PDF."; return; }
-    status.textContent = `Encontrei ${pdfFatos.length} fatos. Marque os que deseja salvar:`;
-    pdfFatos.forEach((f, i) => {
-      const row = document.createElement("label");
-      row.className = "pdf-fato";
-      row.innerHTML =
-        `<input type='checkbox' checked data-i='${i}' /> <span><b>${escapeHtml(f.assunto)}</b> — ${escapeHtml(f.conteudo)}</span>`;
-      lista.appendChild(row);
-    });
-    const acoes = document.createElement("div");
-    acoes.style.marginTop = "10px";
-    acoes.innerHTML =
-      "<button class='btn primario' id='btn-salvar-pdf'><span class='micon'>save</span> Salvar selecionados no cérebro</button>";
-    lista.appendChild(acoes);
-    $("btn-salvar-pdf").addEventListener("click", salvarPdf);
+    dados = await api("/pdf", "POST", { arquivo_base64: base64, nome: file.name });
   } catch (e) {
-    status.textContent = "Erro ao ler o PDF.";
+    dados = { erro: "Falha ao ler o PDF." };
   }
-});
+  pensando.remove();
 
-async function salvarPdf() {
-  const marcados = [...document.querySelectorAll("#pdf-lista input[type=checkbox]:checked")]
-    .map((cb) => pdfFatos[Number(cb.dataset.i)]);
-  $("pdf-status").innerHTML = "<div class='thinking'><div class='reactor-mini'></div> Salvando...</div>";
-  try {
-    const dados = await api("/salvar", "POST", { fatos: marcados });
-    estado.fatos = dados.fatos || estado.fatos;
-    $("pdf-status").textContent = `${dados.salvos} fatos salvos no cérebro!`;
-    $("pdf-lista").innerHTML = "";
-    renderCerebro();
-  } catch (e) {
-    $("pdf-status").textContent = "Erro ao salvar.";
+  if (dados.aviso || dados.erro) {
+    adicionarMsgJarvis(dados.aviso || dados.erro);
+    return;
   }
+  const fatos = dados.fatos || [];
+  if (!fatos.length) {
+    adicionarMsgJarvis("Não encontrei produtos/fatos técnicos neste PDF, senhor.");
+    return;
+  }
+  mostrarCardPdf(file.name, fatos);
+}
+
+function adicionarMsgJarvis(texto) {
+  estado.historico.push({ role: "assistant", content: texto });
+  renderChat();
+}
+
+function mostrarCardPdf(nome, fatos) {
+  const chat = $("chat");
+  const div = document.createElement("div");
+  div.className = "msg jarvis";
+  let itens = "";
+  fatos.forEach((f, i) => {
+    itens +=
+      `<label class='pdf-fato'><input type='checkbox' checked data-i='${i}' /> ` +
+      `<span><b>${escapeHtml(f.assunto)}</b> — ${escapeHtml(f.conteudo)}</span></label>`;
+  });
+  div.innerHTML =
+    `<div class='av'>${SVG_JARVIS}</div><div class='corpo'><div class='nome'>J.A.R.V.I.S.</div>` +
+    "<div class='bolha anotei'>" +
+    `<b><span class='micon'>fact_check</span> Encontrei ${fatos.length} item(ns) em ${escapeHtml(nome)}. Marque o que salvar:</b>` +
+    `<div style='margin:8px 0'>${itens}</div>` +
+    "<div style='display:flex;gap:8px'>" +
+    "<button class='btn' data-acao='salvar'><span class='micon'>save</span> Salvar selecionados</button>" +
+    "<button class='btn azul' data-acao='descartar'><span class='micon'>close</span> Descartar</button>" +
+    "</div></div></div>";
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+
+  div.querySelector("[data-acao=salvar]").addEventListener("click", async () => {
+    const marcados = [...div.querySelectorAll("input[type=checkbox]:checked")].map((cb) => fatos[Number(cb.dataset.i)]);
+    div.querySelector(".bolha").innerHTML =
+      "<div class='thinking'><div class='reactor-mini'></div> Salvando...</div>";
+    try {
+      const dados = await api("/salvar", "POST", { fatos: marcados });
+      estado.fatos = dados.fatos || estado.fatos;
+      div.querySelector(".bolha").innerHTML =
+        `<span class='micon'>check_circle</span> <b>${dados.salvos} item(ns) salvos no cérebro.</b>`;
+      renderCerebro();
+    } catch (e) {
+      div.querySelector(".bolha").innerHTML = "Não consegui salvar agora, senhor.";
+    }
+  });
+  div.querySelector("[data-acao=descartar]").addEventListener("click", () => {
+    div.querySelector(".bolha").innerHTML = "<span class='micon'>close</span> Descartado.";
+  });
 }
 
 // ---------- Botões ----------
@@ -254,10 +371,14 @@ $("btn-nova").addEventListener("click", async () => {
 $("btn-sair").addEventListener("click", sair);
 
 $("btn-baixar").addEventListener("click", () => {
-  let txt = estado.base + "\n\n## Anotações novas\n\n";
+  let txt = "# Biblioteca Técnica FVR — Mestre Fabio Vidal\n\n";
   for (const f of estado.fatos) {
-    const tag = f.tipo === "correcao" ? " [corrigido]" : "";
-    txt += `- [${f.data || ""}] (Fabio)${tag} **${f.assunto || ""}**: ${f.conteudo || ""}\n`;
+    if (f.tipo === "base") {
+      txt += `- **${f.assunto || ""}**: ${f.conteudo || ""}\n`;
+    } else {
+      const tag = f.tipo === "correcao" ? " [corrigido]" : "";
+      txt += `- [${f.data || ""}] (Fabio)${tag} **${f.assunto || ""}**: ${f.conteudo || ""}\n`;
+    }
   }
   const blob = new Blob([txt], { type: "text/markdown" });
   const a = document.createElement("a");

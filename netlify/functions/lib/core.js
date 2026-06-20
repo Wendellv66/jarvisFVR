@@ -8,65 +8,46 @@ const MODELO = "gpt-4o-mini";
 const MARCADOR = "## 🆕 Anotações novas (capturadas pelo Entrevistador)";
 
 // --------------------------------------------------------------------------- //
-// Biblioteca base (conteúdo fixo do PDF). Os fatos novos vêm do Supabase.      //
+// Introdução fixa + Conhecimento base (semeado no Supabase na 1ª execução).     //
+// Após semeado, TUDO vive no banco e é editável (inclusive estes itens).        //
 // --------------------------------------------------------------------------- //
-const BASE_LIBRARY = `# Biblioteca Técnica FVR — Mestre Fabio Vidal
+const INTRO =
+  "# Biblioteca Técnica FVR — Mestre Fabio Vidal\n" +
+  "Cérebro do agente da FVR. Itens marcados (Fabio) foram ensinados/atualizados por ele.";
 
-Cérebro do agente da FVR Comercial, alimentado pela experiência do Fabio Vidal.
-
-## 1. O Modelo FVR / JNF
-- Perfil de Venda: técnica e consultiva.
-- Objetivo: entender o contexto completo do projeto de arquitetura para indicar a ferragem exata.
-- Benefício: reduzir erros de especificação e retrabalho a praticamente zero (padrão europeu suíço/alemão).
-
-## 2. Dobradiças: A Linha Mimetizada
-Destaque: IN.05.061 (Coplan 150) — dobradiça invisível com regulagem 3D; ferragem de 25mm;
-permite portas mimetizadas de 42mm pesando até 80kg; usinagem de 23mm; furação 100% simétrica.
-Regra: suporta 30 a 80kg (3 a 4 dobradiças). Portas a partir de 2.100mm de altura = 4 dobradiças.
-
-Família JNF Coplan:
-- IN.05.067 (Coplan 97): a menor (16kg com 3 un.); 14mm x 75mm; portas pequenas, quadros, shafts; montantes de 18mm.
-- IN.05.066 (Coplan 100): 50kg; 19mm (portas a partir de 25mm); painéis e móveis pequenos e pesados.
-- IN.05.064 (Coplan 120): 60 a 80kg; permite sistema FOLDING (camarão); ótimo custo-benefício.
-- IN.05.065 (Coplan 145): a mais popular; até 60kg e larguras até 900mm; 22mm; várias cores (prata, preta, branca, cobre, dourada).
-- IN.05.062 (Coplan 175): até 120kg; robusta, alto padrão.
-- IN.05.063 (Coplan 235): 190kg; projetos especiais que exigem dobradiça.
-
-## 3. Pivôs Hidráulicos
-Única gama completa do Brasil para portas de 30kg a 500kg. Padrão da linha: softclosing,
-regulagem de velocidade, parada 90° e abertura vai e vem.
-- IN.05.211 (até 60kg): portas 30-50mm; altura máx 2.700mm, largura máx 1.200mm.
-- IN.05.204 (até 100kg): eixo fixo na extremidade (80mm); portas 40-50mm; altura máx 3.000mm, largura máx 1.000mm.
-- IN.05.213 (até 100kg): eixo variável; portas 40-50mm; altura máx 3.000mm, largura máx 1.500mm.
-- IN.05.212 (até 200kg): giro 360º, eixo variável/central; portas a partir de 50mm; altura máx 4.000mm, largura máx 3.000mm.
-- IN.05.215 (até 350kg): portas grossas (ACM 100-200mm); altura máx 6.000mm, largura máx 3.000mm.
-- IN.05.216 (até 500kg, BIG DOORS): portas monumentais ACM; altura máx 6.000mm, largura máx 3.000mm.
-Diferenciais: sistema CAM (abre meia tonelada sem esforço) e amortecimento também na abertura aos 90º.
-Regras: área interna e externa. Para entrada/muito vento, vender junto o Posicionador Magnético IN.17.012
-(exceção: se houver fechadura eletrônica, o IN.17.012 não é necessário).
-
-## 4. Fechaduras
-Categorias: convencionais; magnéticas; convencionais p/ correr; magnéticas p/ correr; auxiliares;
-"asa de avião" (híbrida); chave tetra; segurança 4 pinos; eletrônica touch; pulse lock.
-- 4.1 Convencionais: interna ex. IN.20.845.60; externa ex. IN.20.975.60 (linha 970 JNF). Cilindro europeu ("caveirinha").
-  Adaptadores IN.20.AWC (roseta banheiro) e IN.20.AKN (chave gorge). Estoque enxuto: 1 fechadura + componentes baratos.
-- 4.2 Magnéticas (giro): IN.20.835 (econômica, interna, perfil alumínio); IN.20.855 (robusta, interna e externa).
-- 4.3 Magnética p/ correr: IN.20.925 (Pendulum) — puxador embutido, 100% silenciosa; alto padrão e náutico.
-- 4.4 Auxiliar "Asa de Avião": IN.20.500 — gancho duplo; serve correr e giro.
-- 4.5 Auxiliar mais pedida: IN.20.973.
-- 4.6 Eletrônica Touch: IN.20.860 — pilhas 4x AAA; abre por toque; liberação de emergência.
-- 4.7 Pulse Lock: IN.20.165 — trinco magnético + roseta + bloqueio integrado; anti-pânico; aço inox AISI 304;
-  funciona com a maioria dos puxadores JNF; permite qualquer maçaneta JNF (liberdade de design).
-
-## 5. Protocolo de Atendimento
-Passo 1: identificar perfil. Atende: arquiteto, marcenaria, indústria de móveis/portas de alto padrão.
-Não atende: cliente final/varejo (direcionar educadamente para outro canal).
-Passo 2 (primeiro contato): nome, região/cidade, como nos encontrou.
-Passo 3: escopo — "qual o ambiente e o tipo de porta?" e coletar espessura, peso, altura, largura, material.
-
-## 6. Diretrizes do Agente
-- Responder com calma e precisão. Zero alucinação: se não tiver certeza, não inventar — perguntar ou escalar ao Fabio.
-- Aprendizado contínuo: toda resposta nova do Fabio deve ser registrada na biblioteca.`;
+const BASE_FATOS = [
+  { assunto: "Modelo FVR/JNF", conteudo: "Venda técnica e consultiva; objetivo é entender o projeto e indicar a ferragem exata; padrão de qualidade europeu (suíço/alemão), reduzindo erros e retrabalho a praticamente zero." },
+  // Dobradiças
+  { assunto: "IN.05.061 (Coplan 150)", conteudo: "Dobradiça invisível com regulagem 3D; ferragem 25mm; permite portas mimetizadas de 42mm pesando até 80kg; usinagem 23mm; furação 100% simétrica." },
+  { assunto: "Regra de dobradiças", conteudo: "Dobradiças suportam 30 a 80kg (3 a 4 unidades); portas a partir de 2.100mm de altura exigem 4 dobradiças." },
+  { assunto: "IN.05.067 (Coplan 97)", conteudo: "A menor do mercado; 16kg (3 unidades); 14mm x 75mm; portas pequenas, quadros de energia, shafts; montantes de 18mm." },
+  { assunto: "IN.05.066 (Coplan 100)", conteudo: "Dobradiça 50kg; 19mm (portas a partir de 25mm); painéis e móveis pequenos e pesados." },
+  { assunto: "IN.05.064 (Coplan 120)", conteudo: "Dobradiça 60 a 80kg; permite sistema folding (camarão); ótimo custo-benefício." },
+  { assunto: "IN.05.065 (Coplan 145)", conteudo: "A dobradiça mais popular; até 60kg, larguras até 900mm; 22mm; várias cores (prata, preta, branca, cobre, dourada)." },
+  { assunto: "IN.05.062 (Coplan 175)", conteudo: "Dobradiça até 120kg; robusta, alto padrão." },
+  { assunto: "IN.05.063 (Coplan 235)", conteudo: "Dobradiça 190kg; projetos especiais que exigem dobradiça." },
+  // Pivôs
+  { assunto: "Pivôs hidráulicos (linha)", conteudo: "FVR tem a única gama completa do Brasil para portas de 30kg a 500kg; padrão: softclosing, regulagem de velocidade, parada 90° e abertura vai e vem." },
+  { assunto: "IN.05.211", conteudo: "Pivô até 60kg; portas 30-50mm; altura máx 2.700mm, largura máx 1.200mm." },
+  { assunto: "IN.05.204", conteudo: "Pivô até 100kg; eixo fixo na extremidade (80mm); portas 40-50mm; altura máx 3.000mm, largura máx 1.000mm." },
+  { assunto: "IN.05.213", conteudo: "Pivô até 100kg; eixo variável; portas 40-50mm; altura máx 3.000mm, largura máx 1.500mm." },
+  { assunto: "IN.05.212", conteudo: "Pivô até 200kg; giro 360°, eixo variável/central; portas a partir de 50mm; altura máx 4.000mm, largura máx 3.000mm." },
+  { assunto: "IN.05.215", conteudo: "Pivô até 350kg; portas grossas ACM 100-200mm; altura máx 6.000mm, largura máx 3.000mm." },
+  { assunto: "IN.05.216 (BIG DOORS)", conteudo: "Pivô até 500kg; portas monumentais ACM 100-200mm; altura máx 6.000mm, largura máx 3.000mm." },
+  { assunto: "Pivôs - diferenciais", conteudo: "Sistema CAM abre porta de meia tonelada sem esforço; amortecimento também na abertura aos 90°." },
+  { assunto: "IN.17.012 (Posicionador Magnético)", conteudo: "Obrigatório junto com pivô em portas de entrada/muito vento; dispensável se houver fechadura eletrônica." },
+  // Fechaduras
+  { assunto: "Fechaduras convencionais", conteudo: "Interna ex. IN.20.845.60; externa ex. IN.20.975.60 (linha 970 JNF); cilindro europeu (caveirinha); adaptadores IN.20.AWC (roseta banheiro) e IN.20.AKN (chave gorge); estoque enxuto." },
+  { assunto: "Fechaduras magnéticas (giro)", conteudo: "IN.20.835 econômica (interna, perfil alumínio); IN.20.855 robusta (interna e externa); compatíveis com adaptadores e cilindro europeu." },
+  { assunto: "IN.20.925 (Pendulum)", conteudo: "Fechadura magnética para porta de correr; puxador embutido; 100% silenciosa; alto padrão e setor náutico." },
+  { assunto: "IN.20.500 (Asa de Avião)", conteudo: "Fechadura auxiliar com gancho duplo; serve tanto para portas de correr quanto de giro." },
+  { assunto: "IN.20.973", conteudo: "Fechadura auxiliar mais pedida do catálogo." },
+  { assunto: "IN.20.860 (Touch)", conteudo: "Fechadura eletrônica touch; pilhas 4x AAA; abre por toque; possui liberação de emergência." },
+  { assunto: "IN.20.165 (Pulse Lock)", conteudo: "Trinco magnético + roseta + bloqueio integrado; anti-pânico; aço inox AISI 304; aceita qualquer maçaneta JNF." },
+  // Protocolo e diretrizes
+  { assunto: "Protocolo de atendimento", conteudo: "1) Identificar perfil (atende arquiteto/marcenaria/indústria; não atende cliente final/varejo). 2) Cadastro: nome, cidade, como nos encontrou. 3) Escopo: ambiente e tipo de porta, espessura, peso, altura, largura, material." },
+  { assunto: "Diretrizes do agente", conteudo: "Responder com calma e precisão; zero alucinação (não inventar; perguntar ou escalar ao Fabio); todo dado novo do Fabio deve ser registrado." },
+];
 
 // --------------------------------------------------------------------------- //
 // Clientes                                                                     //
@@ -111,9 +92,23 @@ async function listarFatos() {
   }
 }
 
+// Semeia o conhecimento base no banco (só na 1ª vez). Idempotente.
+async function semear() {
+  try {
+    const { data } = await supabase().from("fatos").select("id").eq("tipo", "base").limit(1);
+    if (data && data.length) return { semeado: false };
+    const linhas = BASE_FATOS.map((f) => ({ data: "", assunto: f.assunto, conteudo: f.conteudo, tipo: "base" }));
+    await supabase().from("fatos").insert(linhas);
+    return { semeado: true, qtd: linhas.length };
+  } catch (e) {
+    return { semeado: false, erro: String(e) };
+  }
+}
+
 function renderFatos(fatos) {
   return fatos
     .map((f) => {
+      if (f.tipo === "base") return `- **${f.assunto || "geral"}**: ${f.conteudo || ""}`;
       const tag = f.tipo === "correcao" ? " [CORRIGIDO]" : "";
       return `- [${f.data || ""}] (Fabio)${tag} **${f.assunto || "geral"}**: ${f.conteudo || ""}`;
     })
@@ -122,7 +117,38 @@ function renderFatos(fatos) {
 
 async function construirBiblioteca() {
   const fatos = await listarFatos();
-  return `${BASE_LIBRARY}\n\n${MARCADOR}\n\n${renderFatos(fatos)}\n`;
+  return `${INTRO}\n\n${renderFatos(fatos)}\n`;
+}
+
+// Extrai um código de produto do texto (ex.: IN.05.212, IN.20.AWC, ZZTEST.900).
+function extrairCodigo(texto) {
+  const m = (texto || "").match(/\b[A-Z][A-Z0-9]*\.[A-Z0-9.]+\b/);
+  return m ? m[0] : null;
+}
+
+// Acha o fato existente correspondente (para correções), de forma SEGURA:
+// prioriza o código do produto; sem código, só casa se o assunto for específico.
+async function acharSemelhante(assunto, conteudo) {
+  const codigo = extrairCodigo(conteudo) || extrairCodigo(assunto);
+  try {
+    const { data } = await supabase().from("fatos").select("id,assunto,conteudo,tipo");
+    const linhas = data || [];
+    if (codigo) {
+      const alvo = codigo.toUpperCase();
+      for (const row of linhas) {
+        if (`${row.assunto || ""} ${row.conteudo || ""}`.toUpperCase().includes(alvo)) return row;
+      }
+      return null; // tem código mas não achou → não arrisca sobrescrever outro
+    }
+    // sem código: só casa se o assunto for específico o bastante (evita pegar o registro errado)
+    if (assunto && assunto.trim().length >= 6) {
+      const alvo = assunto.toLowerCase();
+      for (const row of linhas) {
+        if (`${row.assunto || ""} ${row.conteudo || ""}`.toLowerCase().includes(alvo)) return row;
+      }
+    }
+  } catch (e) {}
+  return null;
 }
 
 // --------------------------------------------------------------------------- //
@@ -162,18 +188,29 @@ Regras (anti-alucinação):
 - Ignore saudações, perguntas e conversa fiada → lista vazia.
 - Se a info já está IDÊNTICA na biblioteca, não repita → lista vazia.
 - CORREÇÃO: se a fala CONTRADIZ/ATUALIZA um dado existente, marque "tipo":"correcao". Senão "tipo":"novo".
+- No campo "assunto", use SEMPRE o código do produto (ex.: IN.05.212, IN.20.925) quando ele
+  existir na fala. Só use um tema genérico se realmente não houver código.
 
 Responda SOMENTE em JSON:
-{"fatos":[{"assunto":"código/tema","conteudo":"o fato em uma frase","tipo":"novo"}]}
+{"fatos":[{"assunto":"código do produto ou tema","conteudo":"o fato em uma frase","tipo":"novo"}]}
 Sem nada a extrair: {"fatos":[]}`;
 
-const PROMPT_DOCUMENTO = `Você extrai conhecimento técnico de um DOCUMENTO (catálogo, ficha técnica)
-da FVR sobre ferragens. Extraia TODOS os fatos técnicos concretos (códigos IN.xx, medidas, pesos,
-capacidades, materiais, usos, regras).
-Regras: use SOMENTE o texto fornecido; não invente; cada fato é uma frase curta; ignore índices,
-páginas, rodapés e marketing vazio.
-Responda SOMENTE em JSON: {"fatos":[{"assunto":"código/tema","conteudo":"o fato"}]}
-Sem nada técnico: {"fatos":[]}`;
+const PROMPT_DOCUMENTO = `Você organiza conhecimento técnico de um DOCUMENTO (catálogo/ficha
+técnica) da FVR sobre ferragens, para um agente de vendas.
+
+AGRUPE POR PRODUTO: para cada produto identificado (geralmente por um código IN.xx), gere UM ÚNICO
+fato consolidando as informações ÚTEIS de venda numa frase clara: o que é, material/acabamento,
+medidas e capacidades relevantes, e uso/aplicação.
+
+IGNORE por completo (não vire fato): códigos de barras/EAN, dimensões e peso de EMBALAGEM,
+quantidade por caixa/unidade, número de versão e data do documento, índices, páginas e marketing
+vazio.
+
+Use SOMENTE o que está no texto; não invente. No campo "assunto" use o código do produto (IN.xx).
+
+Responda SOMENTE em JSON:
+{"fatos":[{"assunto":"IN.xx (nome se houver)","conteudo":"descrição consolidada e útil do produto"}]}
+Se não houver produtos claros: {"fatos":[]}`;
 
 // --------------------------------------------------------------------------- //
 // IA: responder, extrair, resumir, documento                                  //
@@ -241,10 +278,10 @@ async function resumir(resumoAnterior, mensagens) {
   return r.choices[0].message.content.trim();
 }
 
-async function extrairDocumento(texto, origem) {
+async function extrairDocumento(texto /* , origem (não usado: mantém limpo) */) {
   if (!texto || !texto.trim()) return [];
   const pedacos = [];
-  for (let i = 0; i < texto.length; i += 8000) pedacos.push(texto.slice(i, i + 8000));
+  for (let i = 0; i < texto.length; i += 16000) pedacos.push(texto.slice(i, i + 16000));
   const todos = [];
   for (const pedaco of pedacos) {
     try {
@@ -259,9 +296,8 @@ async function extrairDocumento(texto, origem) {
       });
       const dados = JSON.parse(r.choices[0].message.content);
       for (const f of dados.fatos || []) {
-        let conteudo = String(f.conteudo || "").trim();
+        const conteudo = String(f.conteudo || "").trim();
         if (!conteudo) continue;
-        if (origem) conteudo = `${conteudo} (fonte: ${origem})`;
         todos.push({ assunto: String(f.assunto || "").trim() || "geral", conteudo, tipo: "novo" });
       }
     } catch (e) {
@@ -287,19 +323,7 @@ async function salvarFatos(fatos) {
     const assunto = f.assunto || "geral";
     const conteudo = f.conteudo;
     if (f.tipo === "correcao") {
-      let alvo = null;
-      try {
-        const { data: existentes } = await sb.from("fatos").select("id,assunto,conteudo");
-        for (const row of existentes || []) {
-          const campo = `${row.assunto || ""} ${row.conteudo || ""}`.toLowerCase();
-          if (campo.includes(assunto.toLowerCase())) {
-            alvo = row;
-            break;
-          }
-        }
-      } catch (e) {
-        alvo = null;
-      }
+      const alvo = await acharSemelhante(assunto, conteudo);
       const registro = { data, assunto, conteudo, tipo: "correcao" };
       try {
         if (alvo) await sb.from("fatos").update(registro).eq("id", alvo.id);
@@ -342,13 +366,15 @@ async function limparConversa() {
 }
 
 module.exports = {
-  MARCADOR,
-  BASE_LIBRARY,
+  INTRO,
+  BASE_FATOS,
   json,
   autorizado,
+  semear,
   listarFatos,
   renderFatos,
   construirBiblioteca,
+  acharSemelhante,
   responder,
   extrair,
   resumir,
